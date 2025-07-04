@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: server.Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  client:
+    build:
+      context: .
+      dockerfile: client.Dockerfile
+    depends_on:
+      - server
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    stdin_open: true
+    tty: true
