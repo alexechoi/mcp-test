@@ -26,5 +26,7 @@ COPY . .
 # 6. Prepend the venv's bin directory
 ENV PATH="/app/.venv/bin:$PATH"
 
+ENV PORT=8001
+
 # 7. Run the client
 CMD ["uv", "run", "client.py"] 

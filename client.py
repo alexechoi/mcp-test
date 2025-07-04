@@ -2,6 +2,10 @@ import requests
 import json
 from typing import Dict, Any, List
 import time
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse
+
+app = FastAPI()
 
 class MCPClient:
     def __init__(self, base_url: str = "http://localhost:8000"):
@@ -104,25 +108,44 @@ class MCPClient:
         
         print("=================")
 
-def main():
+@app.get("/", response_class=HTMLResponse)
+async def read_root():
+    return """
+    <html>
+        <head>
+            <title>MCP Client</title>
+        </head>
+        <body>
+            <h1>MCP Client</h1>
+            <form action="/send" method="post">
+                <input type="text" name="message" placeholder="Type your message here" required>
+                <button type="submit">Send</button>
+            </form>
+            <button onclick="checkHealth()">Check Health</button>
+            <div id="response"></div>
+            <script>
+                function checkHealth() {
+                    fetch('http://localhost:8000/health')
+                        .then(response => response.json())
+                        .then(data => {
+                            document.getElementById('response').innerHTML = JSON.stringify(data);
+                        })
+                        .catch(error => {
+                            document.getElementById('response').innerHTML = 'Error: ' + error;
+                        });
+                }
+            </script>
+        </body>
+    </html>
+    """
+
+@app.post("/send", response_class=HTMLResponse)
+async def send_message(message: str = Form(...)):
     client = MCPClient()
-    
-    print("MCP Demo Client")
-    print("Type 'exit' to quit, 'context' to view current context")
-    
-    while True:
-        user_input = input("\nYou: ")
-        
-        if user_input.lower() == 'exit':
-            break
-        
-        if user_input.lower() == 'context':
-            client.display_context()
-            continue
-        
-        result = client.send_message(user_input)
-        if "response" in result:
-            print(f"\nAssistant: {result['response']}")
+    result = client.send_message(message)
+    response_text = result.get("response", "No response from server.")
+    return f"<html><body><h2>Response:</h2><p>{response_text}</p><a href='/'>Back</a></body></html>"
 
 if __name__ == "__main__":
-    main() 
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8001) 

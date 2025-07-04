@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 import json
@@ -6,6 +7,15 @@ import uvicorn
 from context_handler import ContextHandler
 
 app = FastAPI(title="Model Context Protocol Demo")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins, you can specify a list of allowed origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
 
 class MCPMessage(BaseModel):
     role: str
@@ -99,6 +109,10 @@ def generate_response(user_message: str, context: Dict[str, Any], context_update
 @app.get("/")
 async def root():
     return {"message": "Model Context Protocol Demo API"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True) 
